@@ -2,3 +2,4 @@ streamlit
 nltk
 PyMuPDF
 scikit-learn
+flask
