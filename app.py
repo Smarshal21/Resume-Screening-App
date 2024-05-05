@@ -24,8 +24,9 @@ def clean_resume(resume_text):
 
 app = Flask(__name__)
 @app.route('/hello', methods=['GET'])
-def sayhello():
-    print("Hello")
+def say_hello():
+    return jsonify({'message': 'Hello, World!'})
+
     
 @app.route('/pdf', methods=['POST'])
 def predict_from_pdf():
