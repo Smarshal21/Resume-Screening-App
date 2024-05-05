@@ -97,7 +97,7 @@ def main():
             st.write("Error:", response.text)
 
 if __name__ == "__main__":
-    app.run(debug=True, threaded=True, use_reloader=False, port=8888)
+    app.run(debug=True, threaded=True, use_reloader=False)
 
 
 
