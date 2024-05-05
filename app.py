@@ -78,7 +78,8 @@ def predict():
         return jsonify({'predicted_category': category_name})
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)
+
 
 # import streamlit as st
 # import requests
