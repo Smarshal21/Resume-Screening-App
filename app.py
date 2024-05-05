@@ -1,5 +1,3 @@
-# Combined app.py
-
 import streamlit as st
 import requests
 from flask import Flask, request, jsonify
@@ -98,7 +96,8 @@ def main():
             st.write("Error:", response.text)
 
 if __name__ == "__main__":
-    app.run(debug=True, threaded=True, use_reloader=False,port = 8080)
+    app.run(debug=True, threaded=True, use_reloader=False, port=8888)
+
 
 
 # import streamlit as st
