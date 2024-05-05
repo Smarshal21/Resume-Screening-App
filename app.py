@@ -1,18 +1,19 @@
+# Combined app.py
+
 import streamlit as st
+import requests
+from flask import Flask, request, jsonify
 import pickle
 import re
 import nltk
-from io import BytesIO
-import PyPDF2
 
 nltk.download('punkt')
 nltk.download('stopwords')
 
 # Loading models
-clf = pickle.load(open('clf.pkl','rb'))
-tfidfd = pickle.load(open('tfidf.pkl','rb'))
+clf = pickle.load(open('clf.pkl', 'rb'))
+tfidfd = pickle.load(open('tfidf.pkl', 'rb'))
 
-# Function to clean resume text
 def clean_resume(resume_text):
     clean_text = re.sub('http\S+\s*', ' ', resume_text)
     clean_text = re.sub('RT|cc', ' ', clean_text)
@@ -23,65 +24,78 @@ def clean_resume(resume_text):
     clean_text = re.sub('\s+', ' ', clean_text)
     return clean_text
 
-# Function to predict category
-def predict_category(resume_text):
-    cleaned_resume = clean_resume(resume_text)
-    input_features = tfidfd.transform([cleaned_resume])
-    prediction_id = clf.predict(input_features)[0]
-    return prediction_id
+app = Flask(__name__)
 
-# Web app
+@app.route('/pdf', methods=['POST'])
+def predict_from_pdf():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'})
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'})
+
+    if file:
+        try:
+            resume_text = file.read().decode('utf-8')
+        except UnicodeDecodeError:
+            # If UTF-8 decoding fails, try decoding with 'latin-1'
+            resume_text = file.read().decode('latin-1')
+
+        cleaned_resume = clean_resume(resume_text)
+        input_features = tfidfd.transform([cleaned_resume])
+        prediction_id = clf.predict(input_features)[0]
+
+        # Map category ID to category name
+        category_mapping = {
+            15: "Java Developer",
+            23: "Testing",
+            23: "Testing",
+            8: "DevOps Engineer",
+            20: "Python Developer",
+            24: "Web Designing",
+            12: "HR",
+            13: "Hadoop",
+            3: "Blockchain",
+            10: "ETL Developer",
+            18: "Operations Manager",
+            6: "Data Science",
+            22: "Sales",
+            16: "Mechanical Engineer",
+            1: "Arts",
+            7: "Database",
+            11: "Electrical Engineering",
+            14: "Health and fitness",
+            19: "PMO",
+            4: "Business Analyst",
+            9: "DotNet Developer",
+            2: "Automation Testing",
+            17: "Network Security Engineer",
+            21: "SAP Developer",
+            5: "Civil Engineer",
+            0: "Advocate",
+        }
+
+        category_name = category_mapping.get(prediction_id, "Unknown")
+
+        return jsonify({'predicted_category': category_name})
+
+# Streamlit app
 def main():
     st.title("Resume Screening App")
-    uploaded_file = st.file_uploader('Upload Resume (PDF)', type=['pdf'])
+    uploaded_file = st.file_uploader('Upload Resume', type=['txt', 'pdf'])
 
     if uploaded_file is not None:
-        pdf_bytes = uploaded_file.read()
-        category_id = predict_category_from_pdf(pdf_bytes)
-        category_name = category_mapping.get(category_id, "Unknown")
-        st.write("Predicted Category:", category_name)
-
-# API endpoint for Streamlit app
-@st.experimental_memo
-def predict_category_from_pdf(pdf_bytes):
-    pdf_reader = PyPDF2.PdfFileReader(BytesIO(pdf_bytes))
-    resume_text = ""
-    for page_num in range(pdf_reader.numPages):
-        resume_text += pdf_reader.getPage(page_num).extractText()
-    category_id = predict_category(resume_text)
-    return category_id
-
-# Mapping category ID to category name
-category_mapping = {
-    15: "Java Developer",
-    23: "Testing",
-    8: "DevOps Engineer",
-    20: "Python Developer",
-    24: "Web Designing",
-    12: "HR",
-    13: "Hadoop",
-    3: "Blockchain",
-    10: "ETL Developer",
-    18: "Operations Manager",
-    6: "Data Science",
-    22: "Sales",
-    16: "Mechanical Engineer",
-    1: "Arts",
-    7: "Database",
-    11: "Electrical Engineering",
-    14: "Health and fitness",
-    19: "PMO",
-    4: "Business Analyst",
-    9: "DotNet Developer",
-    2: "Automation Testing",
-    17: "Network Security Engineer",
-    21: "SAP Developer",
-    5: "Civil Engineer",
-    0: "Advocate",
-}
+        files = {'file': uploaded_file}
+        response = requests.post('http://localhost:5000/pdf', files=files)
+        if response.status_code == 200:
+            result = response.json()
+            st.write("Predicted Category:", result.get('predicted_category'))
+        else:
+            st.write("Error:", response.text)
 
 if __name__ == "__main__":
-    main()
+    app.run(debug=True, threaded=True)
 
 # import streamlit as st
 # import pickle
