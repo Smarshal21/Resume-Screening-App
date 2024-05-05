@@ -25,7 +25,10 @@ def clean_resume(resume_text):
     return clean_text
 
 app = Flask(__name__)
-
+@app.route('/hello', methods=['GET'])
+def sayhello():
+    print("Hello")
+    
 @app.route('/pdf', methods=['POST'])
 def predict_from_pdf():
     if 'file' not in request.files:
