@@ -26,10 +26,8 @@ app = Flask(__name__)
 @app.route('/hello', methods=['GET'])
 def say_hello():
     return jsonify({'message': 'Hello, World!'})
-
-    
-@app.route('/pdf', methods=['POST'])
-def predict_from_pdf():
+# Streamlit app
+def main():
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'})
 
@@ -81,20 +79,6 @@ def predict_from_pdf():
         category_name = category_mapping.get(prediction_id, "Unknown")
 
         return jsonify({'predicted_category': category_name})
-
-# Streamlit app
-def main():
-    st.title("Resume Screening App")
-    uploaded_file = st.file_uploader('Upload Resume', type=['txt', 'pdf'])
-
-    if uploaded_file is not None:
-        files = {'file': uploaded_file}
-        response = requests.post('http://localhost:5000/pdf', files=files)
-        if response.status_code == 200:
-            result = response.json()
-            st.write("Predicted Category:", result.get('predicted_category'))
-        else:
-            st.write("Error:", response.text)
 
 if __name__ == "__main__":
     app.run(debug=True, threaded=True, use_reloader=False)
