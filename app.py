@@ -22,6 +22,10 @@ def clean_resume(resume_text):
     clean_text = re.sub('\s+', ' ', clean_text)
     return clean_text
 
+@app.route('/hello', methods=['GET'])
+def hello():
+    return 'hello'
+
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
