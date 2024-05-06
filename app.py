@@ -1,14 +1,16 @@
-from flask import Flask, request, jsonify
+import streamlit as st
 import pickle
 import re
 import nltk
+import io
+from flask import Flask, request, jsonify
 
 nltk.download('punkt')
 nltk.download('stopwords')
 
 app = Flask(__name__)
 
-# Loading models
+# loading models
 clf = pickle.load(open('clf.pkl','rb'))
 tfidfd = pickle.load(open('tfidf.pkl','rb'))
 
@@ -22,17 +24,20 @@ def clean_resume(resume_text):
     clean_text = re.sub('\s+', ' ', clean_text)
     return clean_text
 
-@app.route('/')
-def index():
-    return "Hello"
-
 @app.route('/predict', methods=['POST'])
 def predict():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
     try:
-        resume_text = request.files['file'].read().decode('utf-8')
+        resume_bytes = file.read()
+        resume_text = resume_bytes.decode('utf-8')
     except UnicodeDecodeError:
         # If UTF-8 decoding fails, try decoding with 'latin-1'
-        resume_text = request.files['file'].read().decode('latin-1')
+        resume_text = resume_bytes.decode('latin-1')
 
     cleaned_resume = clean_resume(resume_text)
     input_features = tfidfd.transform([cleaned_resume])
@@ -69,11 +74,10 @@ def predict():
 
     category_name = category_mapping.get(prediction_id, "Unknown")
 
-    return jsonify({"predicted_category": category_name})
+    return jsonify({'prediction': category_name})
 
 if __name__ == '__main__':
-    app.run()
-
+    app.run(debug=True)
 
 
 # import streamlit as st
