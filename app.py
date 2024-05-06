@@ -23,6 +23,10 @@ def clean_resume(resume_text):
     clean_text = re.sub(r'[^\x00-\x7f]', r' ', clean_text)
     clean_text = re.sub('\s+', ' ', clean_text)
     return clean_text
+    
+@app.route('/')
+def index():
+    return "Hello"
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -77,7 +81,7 @@ def predict():
     return jsonify({'prediction': category_name})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, threaded=False)
 
 
 
